@@ -1,8 +1,10 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileText, BookOpen, Receipt, BarChart2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { LayoutDashboard, FileText, BookOpen, Receipt, BarChart2, LogOut, User } from "lucide-react";
 import { clsx } from "clsx";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/",             label: "Dashboard",      icon: LayoutDashboard },
@@ -14,6 +16,22 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email ?? null);
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/auth/login");
+    router.refresh();
+  };
 
   return (
     <aside className="w-60 flex-shrink-0 bg-white border-r border-brand-beige-dark flex flex-col h-full shadow-soft">
@@ -38,18 +56,14 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
           return (
-            <Link
-              key={href}
-              href={href}
+            <Link key={href} href={href}
               className={clsx(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150",
-                isActive
-                  ? "bg-brand-orange-pale text-brand-orange shadow-soft"
-                  : "text-brand-gray-soft hover:bg-brand-beige hover:text-gray-800"
+                isActive ? "bg-brand-orange-pale text-brand-orange shadow-soft" : "text-brand-gray-soft hover:bg-brand-beige hover:text-gray-800"
               )}
             >
               <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
@@ -59,15 +73,23 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="px-4 py-4 border-t border-brand-beige-dark">
+      {/* Footer utilisateur */}
+      <div className="px-4 py-4 border-t border-brand-beige-dark space-y-2">
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-beige">
-          <div className="w-7 h-7 rounded-full bg-brand-orange-pale flex items-center justify-center text-xs">🐱</div>
-          <div>
-            <p className="text-xs font-medium text-gray-700">Mon compte</p>
-            <p className="text-xs text-brand-gray-soft">Paramètres</p>
+          <div className="w-7 h-7 rounded-full bg-brand-orange-pale flex items-center justify-center flex-shrink-0">
+            <User size={13} className="text-brand-orange" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-700 truncate">{userEmail ?? "Mon compte"}</p>
+            <p className="text-xs text-brand-gray-soft">Connecté</p>
           </div>
         </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-brand-gray-soft hover:bg-red-50 hover:text-red-500 transition-colors"
+        >
+          <LogOut size={13} /> Se déconnecter
+        </button>
       </div>
     </aside>
   );
