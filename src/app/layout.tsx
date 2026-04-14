@@ -1,21 +1,20 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { Sidebar } from "@/components/layout/Sidebar";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "Facture Cat 🐱",
-  description: "Application de comptabilité intelligente",
-};
+  title: 'Facture Cat — Comptabilité TPE/PME',
+  description: 'Application comptable intelligente pour TPE et PME françaises',
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body className="flex h-screen overflow-hidden bg-brand-beige">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-brand-off-white">
-          {children}
-        </main>
+      <body className={inter.className} style={{ background: '#1a1a2e', color: '#e2e2f0' }}>
+        {children}
       </body>
     </html>
-  );
+  )
 }
