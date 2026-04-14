@@ -1,43 +1,50 @@
-"use client";
-import { useState } from "react";
-import { Plus, RefreshCw, Receipt } from "lucide-react";
-import { CaptureNoteModal } from "@/components/notes-frais/CaptureNoteModal";
-import { NotesFraisTable } from "@/components/notes-frais/NotesFraisTable";
-import { useNotesFrais } from "@/hooks/useNotesFrais";
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { NotesFraisList } from '@/components/notes-frais/NotesFraisList'
+import type { NoteFrais } from '@/types/note-frais'
 
 export default function NotesFraisPage() {
-  const { notes, loading, refetch } = useNotesFrais();
-  const [showModal, setShowModal] = useState(false);
+  const router = useRouter()
+  const [moisActif] = useState(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  })
+
+  const handleSelect = (note: NoteFrais) => {
+    router.push(`/notes-frais/${note.id}`)
+  }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-2xl mx-auto px-4 py-6">
+      {/* En-tête */}
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-800">Notes de frais</h1>
-          <p className="text-brand-gray-soft mt-1">
-            {notes.length} note{notes.length !== 1 ? "s" : ""} de frais
+          <h1 className="text-2xl font-bold text-[#2D2A26]">Notes de Frais</h1>
+          <p className="text-sm text-[#6B6560] mt-0.5">
+            {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={refetch}
-            className="p-2.5 rounded-xl border border-brand-beige-dark hover:bg-brand-beige transition-colors text-brand-gray-soft">
-            <RefreshCw size={16} />
-          </button>
-          <button onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-brand-orange text-white px-4 py-2.5 rounded-xl font-medium text-sm hover:bg-brand-orange-light transition-colors shadow-soft">
-            <Plus size={16} /> Capturer un ticket
-          </button>
-        </div>
+        <button
+          onClick={() => router.push('/notes-frais/capture')}
+          className="flex items-center gap-2 bg-[#FF8C42] text-white px-4 py-2.5 rounded-xl font-medium hover:bg-[#E67A35] transition-colors shadow-md"
+        >
+          <span className="text-lg">📷</span>
+          <span>Ajouter</span>
+        </button>
       </div>
 
-      <NotesFraisTable notes={notes} loading={loading} onRefresh={refetch} />
-
-      {showModal && (
-        <CaptureNoteModal
-          onClose={() => setShowModal(false)}
-          onSuccess={() => { setShowModal(false); refetch(); }}
+      {/* Sélecteur de mois */}
+      <div className="bg-[#FFF8F0] border border-[#F0E6DC] rounded-xl px-4 py-3 mb-5">
+        <input
+          type="month"
+          defaultValue={moisActif}
+          className="bg-transparent text-[#2D2A26] font-medium focus:outline-none cursor-pointer"
         />
-      )}
+      </div>
+
+      <NotesFraisList onSelect={handleSelect} />
     </div>
-  );
+  )
 }
