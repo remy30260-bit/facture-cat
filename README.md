@@ -1,39 +1,44 @@
-# Facture Cat 🐱
+# 🐱 Facture Cat
 
-> Application de comptabilité intelligente alimentée par Gemini 2.5 Flash
+Application web comptable intelligente pour TPE/PME françaises.
 
-## Stack technique
+## Stack
+- **Frontend** : Next.js 14 (App Router, TypeScript)
+- **Backend** : Supabase (Auth, PostgreSQL, Storage)
+- **IA** : Gemini 2.5 Flash (OCR factures)
+- **Hébergement** : Vercel
 
-- **Next.js 14** (App Router + TypeScript)
-- **Tailwind CSS** (thème Pennylane pastel orange/beige)
-- **Supabase** (Auth + PostgreSQL + Storage)
-- **Gemini 2.5 Flash** (OCR factures & notes de frais)
-
-## Démarrage rapide
+## Installation
 
 ```bash
 npm install
 cp .env.local.example .env.local
-# Remplir NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY
+# Remplir les variables dans .env.local
 npm run dev
 ```
 
-Ouvrir [http://localhost:3000](http://localhost:3000)
+## Phases de développement
+- ✅ **Phase 1** — Auth + Layout + Dashboard
+- 🔜 **Phase 2** — Clients & Fournisseurs
+- 🔜 **Phase 3** — Facturation
+- 🔜 **Phase 4** — Dépenses & Notes de frais
+- 🔜 **Phase 5** — Comptabilité
+- 🔜 **Phase 6** — TVA
+- 🔜 **Phase 7** — Trésorerie & Banque
+- 🔜 **Phase 8** — Immobilisations
+- 🔜 **Phase 9** — Bilan & Résultat
+- 🔜 **Phase 10** — Paramètres
 
 ## Structure
-
 ```
 src/
-├── app/                    # Pages (App Router)
-│   ├── layout.tsx
-│   ├── page.tsx            # Dashboard
-│   ├── factures/
-│   ├── comptabilite/
-│   ├── notes-frais/
-│   └── bilan/
-├── components/
-│   ├── layout/Sidebar.tsx
-│   └── dashboard/
-├── lib/supabase/
-└── types/
+├── app/                  # Pages Next.js (App Router)
+│   ├── (authenticated)/  # Routes protégées
+│   └── login/            # Page de connexion publique
+├── components/           # Composants React
+│   ├── layout/           # Sidebar, Header, Breadcrumb
+│   └── ui/               # Composants UI réutilisables
+├── lib/                  # Utilitaires
+│   └── supabase/         # Clients Supabase
+└── middleware.ts         # Protection des routes
 ```
