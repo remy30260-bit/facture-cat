@@ -1,25 +1,63 @@
 "use client";
-import { FileText } from "lucide-react";
-import { EmptyState } from "@/components/dashboard/EmptyState";
+import { useState, useEffect } from "react";
+import { FileText, Plus, RefreshCw } from "lucide-react";
+import { UploadFactureModal } from "@/components/factures/UploadFactureModal";
+import { FacturesTable } from "@/components/factures/FacturesTable";
+import { createClient } from "@/lib/supabase/client";
+import type { Facture } from "@/types";
 
 export default function FacturesPage() {
+  const [showModal, setShowModal] = useState(false);
+  const [factures, setFactures] = useState<Facture[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchFactures = async () => {
+    setLoading(true);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("factures")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error && data) setFactures(data as Facture[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchFactures(); }, []);
+
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold text-gray-800">Factures</h1>
-          <p className="text-brand-gray-soft mt-1">Gérez vos factures fournisseurs et clients</p>
+          <p className="text-brand-gray-soft mt-1">
+            {factures.length} facture{factures.length !== 1 ? "s" : ""} au total
+          </p>
         </div>
-        <button className="flex items-center gap-2 bg-brand-orange text-white px-4 py-2.5 rounded-xl font-medium text-sm hover:bg-brand-orange-light transition-colors shadow-soft">
-          <span>+</span> Nouvelle facture
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={fetchFactures}
+            className="p-2.5 rounded-xl border border-brand-beige-dark hover:bg-brand-beige transition-colors text-brand-gray-soft"
+            title="Rafraîchir"
+          >
+            <RefreshCw size={16} />
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 bg-brand-orange text-white px-4 py-2.5 rounded-xl font-medium text-sm hover:bg-brand-orange-light transition-colors shadow-soft"
+          >
+            <Plus size={16} /> Importer une facture
+          </button>
+        </div>
       </div>
-      <EmptyState
-        title="Aucune facture"
-        description="Importez vos factures PDF ou images — Gemini les analysera automatiquement."
-        icon={FileText}
-        action={{ label: "Importer une facture", href: "#" }}
-      />
+
+      <FacturesTable factures={factures} loading={loading} onRefresh={fetchFactures} />
+
+      {showModal && (
+        <UploadFactureModal
+          onClose={() => setShowModal(false)}
+          onSuccess={() => { setShowModal(false); fetchFactures(); }}
+        />
+      )}
     </div>
   );
 }
