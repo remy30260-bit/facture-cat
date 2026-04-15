@@ -18,7 +18,7 @@ const navigation = [
   { nom: 'Factures achats', href: '/factures/achats', icone: ShoppingCart },
   { nom: 'Devis', href: '/devis', icone: ClipboardList },
   { nom: 'Avoirs', href: '/avoirs', icone: FileMinus },
-  { nom: 'Notes de frais', href: '/notes-de-frais', icone: Receipt },
+  { nom: 'Notes de frais', href: '/notes-frais', icone: Receipt },
   {
     nom: 'Comptabilité',
     icone: BookOpen,
