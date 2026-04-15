@@ -14,42 +14,40 @@ export default async function DashboardPage() {
   const debutMois = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1).toISOString()
   const finMois = new Date(maintenant.getFullYear(), maintenant.getMonth() + 1, 0).toISOString()
 
-  // CA du mois (factures de vente payées ou envoyées)
+  // CA du mois (factures de vente)
   const { data: facturesVente } = await supabase
-    .from('invoices')
-    .select('total_ttc, status, due_date')
-    .eq('type', 'vente')
+    .from('factures')
+    .select('montant_ttc, statut, date_facture')
+    .in('statut', ['valide', 'comptabilise'])
     .gte('created_at', debutMois)
     .lte('created_at', finMois)
 
-  // Dépenses du mois (factures achat)
+  // Dépenses du mois (factures fournisseurs)
   const { data: facturesAchat } = await supabase
-    .from('invoices')
-    .select('total_ttc, status')
-    .eq('type', 'achat')
+    .from('factures')
+    .select('montant_ttc, statut')
+    .eq('statut', 'rembourse')
     .gte('created_at', debutMois)
     .lte('created_at', finMois)
 
-  // Factures en attente
+  // Factures en attente (brouillon ou validées non remboursées)
   const { data: enAttente } = await supabase
-    .from('invoices')
-    .select('id, total_ttc, due_date, status')
-    .eq('type', 'vente')
-    .in('status', ['sent', 'overdue'])
+    .from('factures')
+    .select('id, montant_ttc, date_facture, statut')
+    .in('statut', ['brouillon', 'valide'])
 
-  // Dernières factures émises
+  // Dernières factures
   const { data: dernieresFactures } = await supabase
-    .from('invoices')
-    .select('id, invoice_number, total_ttc, status, created_at')
-    .eq('type', 'vente')
+    .from('factures')
+    .select('id, numero_facture, montant_ttc, statut, created_at')
     .order('created_at', { ascending: false })
     .limit(5)
 
-  const caMois = facturesVente?.reduce((s, f) => s + (f.total_ttc ?? 0), 0) ?? 0
-  const depensesMois = facturesAchat?.reduce((s, f) => s + (f.total_ttc ?? 0), 0) ?? 0
+  const caMois = facturesVente?.reduce((s, f) => s + (f.montant_ttc ?? 0), 0) ?? 0
+  const depensesMois = facturesAchat?.reduce((s, f) => s + (f.montant_ttc ?? 0), 0) ?? 0
   const resultatNet = caMois - depensesMois
-  const totalEnAttente = enAttente?.reduce((s, f) => s + (f.total_ttc ?? 0), 0) ?? 0
-  const retard = enAttente?.filter(f => f.due_date && new Date(f.due_date) < maintenant) ?? []
+  const totalEnAttente = enAttente?.reduce((s, f) => s + (f.montant_ttc ?? 0), 0) ?? 0
+  const retard = enAttente?.filter(f => f.date_facture && new Date(f.date_facture) < maintenant) ?? []
 
   const kpis = [
     {
@@ -74,7 +72,7 @@ export default async function DashboardPage() {
       bg: resultatNet >= 0 ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)',
     },
     {
-      titre: 'En attente paiement',
+      titre: 'En attente',
       valeur: formatEur(totalEnAttente),
       icone: Clock,
       couleur: '#fbbf24',
@@ -84,11 +82,10 @@ export default async function DashboardPage() {
   ]
 
   const statutLabels: Record<string, { label: string; color: string }> = {
-    draft: { label: 'Brouillon', color: '#6b6a8a' },
-    sent: { label: 'Envoyée', color: '#60a5fa' },
-    paid: { label: 'Payée', color: '#34d399' },
-    overdue: { label: 'En retard', color: '#f87171' },
-    cancelled: { label: 'Annulée', color: '#9ca3af' },
+    brouillon:    { label: 'Brouillon',      color: '#6b6a8a' },
+    valide:       { label: 'Validée',        color: '#60a5fa' },
+    comptabilise: { label: 'Comptabilisée', color: '#34d399' },
+    rembourse:    { label: 'Remboursée',     color: '#a78bfa' },
   }
 
   return (
@@ -98,7 +95,7 @@ export default async function DashboardPage() {
       <div className="mb-8">
         <h1 className="text-xl font-bold text-white">Dashboard</h1>
         <p className="text-sm mt-1" style={{ color: '#6b6a8a' }}>
-          Vue d'ensemble — {maintenant.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+          Vue d&apos;ensemble — {maintenant.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
         </p>
       </div>
 
@@ -110,7 +107,7 @@ export default async function DashboardPage() {
         >
           <AlertTriangle size={16} style={{ color: '#f87171' }} />
           <span style={{ color: '#fca5a5' }}>
-            <strong>{retard.length} facture(s)</strong> en retard de paiement
+            <strong>{retard.length} facture(s)</strong> en attente de traitement
           </span>
         </div>
       )}
@@ -145,20 +142,20 @@ export default async function DashboardPage() {
       {/* Dernières factures */}
       <div className="rounded-xl overflow-hidden" style={{ background: '#16213e', border: '1px solid #2d2b55' }}>
         <div className="px-5 py-4" style={{ borderBottom: '1px solid #2d2b55' }}>
-          <h2 className="text-sm font-semibold text-white">Dernières factures émises</h2>
+          <h2 className="text-sm font-semibold text-white">Dernières factures</h2>
         </div>
         <div className="divide-y" style={{ borderColor: '#2d2b55' }}>
           {!dernieresFactures || dernieresFactures.length === 0 ? (
             <div className="px-5 py-8 text-center text-sm" style={{ color: '#6b6a8a' }}>
-              Aucune facture pour l'instant
+              Aucune facture pour l&apos;instant
             </div>
           ) : (
             dernieresFactures.map(f => {
-              const statut = statutLabels[f.status] ?? { label: f.status, color: '#6b6a8a' }
+              const statut = statutLabels[f.statut] ?? { label: f.statut, color: '#6b6a8a' }
               return (
                 <div key={f.id} className="flex items-center justify-between px-5 py-3">
                   <div>
-                    <p className="text-sm font-medium text-white">{f.invoice_number}</p>
+                    <p className="text-sm font-medium text-white">{f.numero_facture ?? '—'}</p>
                     <p className="text-xs mt-0.5" style={{ color: '#6b6a8a' }}>
                       {new Date(f.created_at).toLocaleDateString('fr-FR')}
                     </p>
@@ -171,7 +168,7 @@ export default async function DashboardPage() {
                       {statut.label}
                     </span>
                     <span className="text-sm font-semibold text-white">
-                      {formatEur(f.total_ttc ?? 0)}
+                      {formatEur(f.montant_ttc ?? 0)}
                     </span>
                   </div>
                 </div>
