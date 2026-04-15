@@ -28,22 +28,28 @@ export default function FacturesPage() {
     <div className="p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-800">Factures</h1>
-          <p className="text-brand-gray-soft mt-1">
+          <h1 className="text-2xl font-semibold text-white">Factures</h1>
+          <p className="text-sm mt-1" style={{ color: '#6b6a8a' }}>
             {factures.length} facture{factures.length !== 1 ? "s" : ""} au total
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={fetchFactures}
-            className="p-2.5 rounded-xl border border-brand-beige-dark hover:bg-brand-beige transition-colors text-brand-gray-soft"
+            className="p-2.5 rounded-xl transition-colors"
+            style={{ border: '1px solid #2d2b55', color: '#8b8aad', background: 'transparent' }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.1)'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
             title="Rafraîchir"
           >
             <RefreshCw size={16} />
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-brand-orange text-white px-4 py-2.5 rounded-xl font-medium text-sm hover:bg-brand-orange-light transition-colors shadow-soft"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm text-white transition-colors"
+            style={{ background: '#7c3aed' }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#6d28d9'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = '#7c3aed'}
           >
             <Plus size={16} /> Importer une facture
           </button>
