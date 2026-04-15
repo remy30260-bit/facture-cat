@@ -15,7 +15,6 @@ export default function Header({ email }: HeaderProps) {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/login')
-    router.refresh()
   }
 
   return (
